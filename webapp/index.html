@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Copy the Winners? A Live Mirror-Trading Experiment on Polymarket</title>
+<meta name="description" content="A live 48-hour mirror-trading experiment on Polymarket: every trade by the Top-10 leaderboard wallets, copied on paper and checked hourly.">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+
+<nav class="topnav" id="topnav">
+  <span class="brand">Copy&nbsp;the&nbsp;Winners?</span>
+  <div class="navlinks">
+    <a href="#experiment">Experiment</a>
+    <a href="#edge">Edge</a>
+    <a href="#real">Luck&nbsp;check</a>
+    <a href="#wallets">Wallets</a>
+    <a href="#markets">Markets</a>
+    <a href="#distributions">Distributions</a>
+    <a href="#quality">Data&nbsp;quality</a>
+    <a href="#study1">Study&nbsp;1</a>
+    <a href="#methods">Methods</a>
+    <a href="#sources">Sources</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- ============ ERROR CARD (hidden unless data.json fails) ============ -->
+  <div class="card error-card hidden" id="err-card">
+    <h3>Data not available</h3>
+    <p>Could not load <code>data.json</code>. If you opened this file directly from disk,
+    serve the folder instead (e.g.&nbsp;<code>python -m http.server</code>); browsers block
+    <code>fetch()</code> on <code>file://</code> URLs.</p>
+    <p class="small" id="err-detail"></p>
+  </div>
+
+  <!-- ============ HERO ============ -->
+  <header class="hero" id="hero">
+    <p class="overline">A live experiment in prediction markets</p>
+    <h1>Copy the Winners?</h1>
+    <p class="subtitle">We copied <em>every</em> trade made by the Top-10 wallets on the
+    Polymarket profit leaderboard for 48 straight hours, on paper at real market prices,
+    and checked every position every hour. This page is the full record.</p>
+
+    <div class="stat-row">
+      <div class="stat"><div class="stat-num" id="stat-positions">-</div><div class="stat-label">trades copied</div></div>
+      <div class="stat"><div class="stat-num" id="stat-markets">-</div><div class="stat-label">markets touched</div></div>
+      <div class="stat"><div class="stat-num" id="stat-hours">-</div><div class="stat-label">hours live</div></div>
+      <div class="stat"><div class="stat-num" id="stat-marks">-</div><div class="stat-label">hourly price checks</div></div>
+    </div>
+
+    <div class="finding" id="hero-finding">Loading the verdict…</div>
+    <p class="small muted" id="meta-line"></p>
+  </header>
+
+  <!-- ============ THE EXPERIMENT ============ -->
+  <section id="experiment">
+    <h2>The experiment</h2>
+    <p class="lede">The question: <strong>to what extent is mirror-trading a profitable investment
+    strategy in current-event prediction markets?</strong> The test: follow the people who are
+    visibly winning, and see if following them wins too.</p>
+
+    <div class="grid-3">
+      <div class="card">
+        <h3>The mirror rule</h3>
+        <p>Watch the Top-10 wallets on Polymarket&rsquo;s 30-day profit leaderboard. Every time one
+        of them trades, <strong>buys and sells alike</strong>, we record a paper copy of that
+        trade at the real market price at that moment. Sells are normalized into equivalent
+        long positions, so everything is comparable.</p>
+      </div>
+      <div class="card">
+        <h3>The benchmark</h3>
+        <p>A strategy is only &ldquo;skill&rdquo; if it beats something dumber. Ours is
+        <strong>&ldquo;always bet the favorite&rdquo;</strong>: in the same market, at the same
+        moment, just buy whichever outcome the market already says is more likely. No leaderboard
+        required.</p>
+      </div>
+      <div class="card">
+        <h3>The scoring</h3>
+        <p>Every open position is re-priced <strong>every hour</strong> from Polymarket&rsquo;s
+        order-book price history. Markets that resolve settle at $1 (right) or $0 (wrong).
+        The <em>edge</em> is simply: mirror return &minus; favorite return, in the same markets
+        at the same times.</p>
+      </div>
+    </div>
+
+    <div class="card diagram-card">
+      <svg viewBox="0 0 920 150" role="img" aria-label="Diagram: leaderboard wallet trades, we copy at the same price, benchmark bets the favorite, both marked hourly" class="exp-svg">
+        <!-- boxes -->
+        <rect x="10"  y="45" width="170" height="60" rx="4" fill="#fff" stroke="#1F1F1F" stroke-width="1"/>
+        <text x="95" y="70" text-anchor="middle" class="svg-h">Top-10 wallet</text>
+        <text x="95" y="90" text-anchor="middle" class="svg-b">trades on a market</text>
+        <rect x="260" y="10" width="190" height="60" rx="4" fill="#fff" stroke="#1E7A52" stroke-width="1.5"/>
+        <text x="355" y="35" text-anchor="middle" class="svg-h" fill="#1E7A52">Mirror copy</text>
+        <text x="355" y="55" text-anchor="middle" class="svg-b">same side, same price</text>
+        <rect x="260" y="85" width="190" height="60" rx="4" fill="#fff" stroke="#6B7280" stroke-width="1.5"/>
+        <text x="355" y="110" text-anchor="middle" class="svg-h" fill="#6B7280">Benchmark</text>
+        <text x="355" y="130" text-anchor="middle" class="svg-b">buys the favorite instead</text>
+        <rect x="530" y="45" width="170" height="60" rx="4" fill="#fff" stroke="#1F1F1F" stroke-width="1"/>
+        <text x="615" y="70" text-anchor="middle" class="svg-h">Marked hourly</text>
+        <text x="615" y="90" text-anchor="middle" class="svg-b">1h, 2h, … 48h</text>
+        <rect x="760" y="45" width="150" height="60" rx="4" fill="#fff" stroke="#D98E04" stroke-width="1.5"/>
+        <text x="835" y="70" text-anchor="middle" class="svg-h" fill="#D98E04">Edge</text>
+        <text x="835" y="90" text-anchor="middle" class="svg-b">mirror − favorite</text>
+        <!-- arrows -->
+        <line x1="180" y1="68" x2="255" y2="40" stroke="#1F1F1F" stroke-width="1"/>
+        <line x1="180" y1="82" x2="255" y2="112" stroke="#1F1F1F" stroke-width="1"/>
+        <line x1="450" y1="40" x2="525" y2="68" stroke="#1F1F1F" stroke-width="1"/>
+        <line x1="450" y1="112" x2="525" y2="82" stroke="#1F1F1F" stroke-width="1"/>
+        <line x1="700" y1="75" x2="755" y2="75" stroke="#1F1F1F" stroke-width="1"/>
+        <polygon points="755,75 747,71 747,79" fill="#1F1F1F"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============ EDGE CURVE ============ -->
+  <section id="edge">
+    <h2>The edge curve</h2>
+    <p class="lede">Hold every copied position for <em>N</em> hours, then compare. The
+    <span class="ink-green">green line</span> is the mirror strategy, the
+    <span class="ink-gray">gray line</span> is the always-bet-the-favorite benchmark, and the
+    <span class="ink-gold">gold line</span> is the difference: the edge.</p>
+
+    <div class="card">
+      <div class="chart-controls">
+        <span class="control-label">95% confidence band clustered</span>
+        <label><input type="radio" name="ci-cluster" value="m" checked> by market</label>
+        <label><input type="radio" name="ci-cluster" value="w"> by wallet</label>
+      </div>
+      <div class="chart" id="chart-edge"></div>
+    </div>
+
+    <div class="card table-card">
+      <h3>The numbers</h3>
+      <div class="table-scroll">
+        <table class="data-table" id="edge-table">
+          <thead>
+            <tr><th>Horizon</th><th>Cells</th><th>Wallets</th><th>Mirror</th><th>Favorite</th>
+                <th>Edge</th><th>95% CI (market)</th><th>p (market)</th>
+                <th>95% CI (wallet)</th><th>p (wallet)</th></tr>
+          </thead>
+          <tbody id="edge-tbody"></tbody>
+        </table>
+      </div>
+      <p class="small muted">Returns are gross (no fees or slippage). A &ldquo;cell&rdquo; is one
+      de-duplicated bet: one (wallet, market, side) combination, however many times it was filled.</p>
+    </div>
+  </section>
+
+  <!-- ============ IS IT REAL ============ -->
+  <section id="real">
+    <h2>Testing the edge against luck</h2>
+    <p class="lede">An average edge means nothing without error bars. We bootstrap-resample the
+    data 10,000 times (seeded, reproducible) two ways, treating each <em>market bet</em> as
+    a unit and then each <em>wallet</em> as a unit, and ask how often a no-edge world
+    would produce numbers like these.</p>
+
+    <div class="card">
+      <div class="chart" id="chart-ci"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>p-values by horizon</h3>
+        <div class="chart chart-sm" id="chart-pvals"></div>
+        <p class="small muted">Bars below the dashed 0.05 line would count as statistically
+        significant. <span class="ink-brick">Brick</span> = significant, gray = not.</p>
+      </div>
+      <div class="card">
+        <h3>What would convince us</h3>
+        <p>For the edge to be <em>evidence of skill</em>, its 95% confidence interval would need to
+        sit entirely above zero, under <strong>both</strong> clusterings, at horizons long enough
+        to actually trade on, and survive realistic trading costs.</p>
+        <p id="real-verdict" class="verdict"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WALLETS ============ -->
+  <section id="wallets">
+    <h2>The wallets we copied</h2>
+    <p class="lede">Activity is wildly uneven: a few leaderboard wallets do almost all of the
+    trading. That is exactly why the &ldquo;by wallet&rdquo; error bars above are so wide.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Positions captured per wallet</h3>
+        <div class="chart chart-sm" id="chart-wallet-bars"></div>
+      </div>
+      <div class="card">
+        <h3>Per-wallet edge curves</h3>
+        <div class="chart chart-sm" id="chart-wallet-curves"></div>
+        <p class="small muted">Click a name in the legend to hide or show that wallet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MARKET EXPLORER ============ -->
+  <section id="markets">
+    <h2>Market explorer</h2>
+    <p class="lede">Every market the leaderboard touched during the window. Search, sort, and pick
+    a holding horizon to see where copying helped (<span class="ink-green">green</span>) and where
+    it hurt (<span class="ink-brick">brick</span>).</p>
+    <div class="card">
+      <div class="explorer-controls">
+        <input type="search" id="market-search" placeholder="Search markets… (e.g. Dodgers, Fed, NBA)" aria-label="Search markets">
+        <label class="control-label" for="market-horizon">Edge at horizon
+          <select id="market-horizon"></select>
+        </label>
+        <span class="small muted" id="market-count"></span>
+      </div>
+      <div class="table-scroll table-tall">
+        <table class="data-table" id="market-table">
+          <thead id="market-thead">
+            <tr>
+              <th data-key="title" class="sortable">Market</th>
+              <th data-key="n_fills" class="sortable num">Fills</th>
+              <th data-key="n_cells" class="sortable num">Cells</th>
+              <th data-key="resolved" class="sortable">Resolved</th>
+              <th data-key="entry" class="sortable num">Avg entry</th>
+              <th data-key="edge" class="sortable num">Edge</th>
+            </tr>
+          </thead>
+          <tbody id="market-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DISTRIBUTIONS ============ -->
+  <section id="distributions">
+    <h2>Distributions</h2>
+    <p class="lede">Averages hide the spread. The fan chart shows the middle 50% and middle 90%
+    of per-bet returns at each horizon; the histograms show what the copied trades actually
+    looked like.</p>
+    <div class="card">
+      <h3>Return fan: mirror vs. favorite</h3>
+      <div class="chart" id="chart-fan"></div>
+      <p class="small muted">Solid line = median. Dark band = 25th-75th percentile. Light band =
+      5th-95th. Click legend entries to isolate one strategy.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Entry prices of copied trades</h3>
+        <div class="chart chart-sm" id="chart-entry-hist"></div>
+        <p class="small muted">Price = the market&rsquo;s implied probability when we copied.
+        Gold line marks 0.50; right of it, the trader was already on the favorite.</p>
+      </div>
+      <div class="card">
+        <h3>When the trades happened</h3>
+        <div class="chart chart-sm" id="chart-timeline"></div>
+        <p class="small muted">Positions opened per hour of the experiment.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DATA QUALITY ============ -->
+  <section id="quality">
+    <h2>Data quality</h2>
+    <p class="lede">Where every hourly mark came from, and the fine print.</p>
+    <div class="card">
+      <h3>Mark sources by horizon</h3>
+      <div class="chart" id="chart-marksrc"></div>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <h3>Gross returns</h3>
+        <p>No fees, no bid-ask spread, no price impact. Real copy-trading would do
+        <em>worse</em> than these numbers, not better. That makes a null result here
+        conservative.</p>
+      </div>
+      <div class="card">
+        <h3>Paper trading</h3>
+        <p>No real money was placed. Entries use the market mid-price at the moment the copied
+        trade printed; an actual order would often get a worse price.</p>
+      </div>
+      <div class="card">
+        <h3>Late entries</h3>
+        <p>A trade copied near the end of the window can&rsquo;t be marked at long horizons yet,
+        so sample sizes shrink as the horizon grows, and the error bars widen with them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STUDY 1 ============ -->
+  <section id="study1">
+    <h2>Study 1: the historical test</h2>
+    <p class="lede">Before the live experiment, we asked the past: among
+    <strong>151 active Polymarket wallets</strong>, does <em>anyone</em> predict outcomes better
+    than a robot betting at the same market prices? Each wallet&rsquo;s Brier score was compared
+    to a price-null via a 10,000-shuffle luck test, corrected for multiple testing.</p>
+    <div class="grid-2">
+      <div class="card">
+        <div class="bignum-row">
+          <div class="bignum"><div class="stat-num">0<span class="of">/</span>151</div><div class="stat-label">wallets beat luck</div></div>
+          <div class="bignum"><div class="stat-num">0.305</div><div class="stat-label">best (smallest) p-value</div></div>
+        </div>
+        <p>Not one trader cleared the bar, and the single best result was nowhere near it. If
+        nobody demonstrably has skill, there is nobody whose trades are worth mirroring. Study 2
+        tested that implication live.</p>
+      </div>
+      <div class="card">
+        <h3>Wallet p-values</h3>
+        <div id="study1-content">
+          <div class="chart chart-sm hidden" id="chart-study1"></div>
+          <div class="pending-card hidden" id="study1-pending">
+            <p><strong>Per-wallet table pending.</strong> The full 151-row p-value table will
+            appear here once <code>paper/study1_table.json</code> is exported. The headline
+            result (0 of 151, min&nbsp;p&nbsp;=&nbsp;0.305) is final.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ METHODS & GLOSSARY ============ -->
+  <section id="methods">
+    <h2>Methods &amp; glossary</h2>
+    <p class="lede">Plain-English definitions of every term on this page.</p>
+    <div class="card glossary">
+      <details>
+        <summary>Prediction market</summary>
+        <p>A market where you buy shares in an outcome (&ldquo;Yes, the Dodgers win&rdquo;). Shares
+        pay $1 if the outcome happens, $0 if it doesn&rsquo;t, so a 62¢ price is the crowd saying
+        &ldquo;62% likely.&rdquo;</p>
+      </details>
+      <details>
+        <summary>Mirror trade</summary>
+        <p>Copying someone else&rsquo;s trade: same market, same side, at the price available when
+        their trade became visible. We mirrored every buy and sell of the Top-10 leaderboard
+        wallets, with sells normalized into equivalent long positions.</p>
+      </details>
+      <details>
+        <summary>The favorite (benchmark)</summary>
+        <p>Whichever outcome the market currently prices above 50%. &ldquo;Always bet the
+        favorite&rdquo; needs no skill and no leaderboard. If copying winners can&rsquo;t beat it,
+        the leaderboard signal is worthless.</p>
+      </details>
+      <details>
+        <summary>Gross return</summary>
+        <p>(price now ÷ price paid) &minus; 1, before any fees, spreads, or slippage. Real-world
+        results would be strictly worse.</p>
+      </details>
+      <details>
+        <summary>Why we de-duplicate repeated fills</summary>
+        <p>A wallet might fire 50 small orders into the same bet within minutes. Counting all 50
+        would let one enthusiastic wallet vote 50 times. We collapse everything to one
+        &ldquo;cell&rdquo; per (wallet, market, side) before averaging, so each distinct bet counts
+        once.</p>
+      </details>
+      <details>
+        <summary>Bootstrap confidence interval</summary>
+        <p>Resample the observed bets (or wallets) with replacement 10,000 times and recompute the
+        mean each time. The middle 95% of those means is the confidence interval. If it contains
+        zero, the data are consistent with no edge at all.</p>
+      </details>
+      <details>
+        <summary>p-value</summary>
+        <p>The probability of seeing an edge at least this large (in either direction) if the true
+        edge were zero. Small (&lt; 0.05) = surprising under pure luck. Ours mostly aren&rsquo;t.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ SOURCES ============ -->
+  <section id="sources">
+    <h2>Works cited</h2>
+    <div class="card">
+      <ol class="works-cited">
+        <li>Akey, Pat, et al. “Who Wins and Who Loses in Prediction Markets? Evidence from Polymarket.” SSRN, 18 Mar. 2026, ssrn.com/abstract=6443103.</li>
+        <li>Dorfleitner, Gregor, and Isabel Scheckenbach. “Trading Activity on Social Trading Platforms - a Behavioral Approach.” The Journal of Risk Finance, vol. 23, no. 1, Jan. 2022, pp. 32-54.</li>
+        <li>Grundke, Peter, and Gerrit Wittke. “Social Trading Platforms vs. Mutual Funds: Herding Tendencies and Portfolio Risks.” The European Journal of Finance, vol. 31, no. 7, Dec. 2024, pp. 827-49.</li>
+        <li>“Kalshi.” Kalshi.com, 2018, research.kalshi.com/articles/crisis-alpha.</li>
+        <li>“Kalshi Research.” Kalshi.com, 2026, research.kalshi.com/articles/mamdani-primary-victory.</li>
+        <li>Lu, Juye Shirley. “To Mirror or Not to Mirror: Modeling Relationships in Social Trading.” MIT, 2017, dspace.mit.edu/entities/publication/d04baf10-ccf7-4358-9aaf-6716565782e9.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <hr class="rule">
+    <p>June 2026</p>
+  </footer>
+
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

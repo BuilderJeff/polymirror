@@ -1,0 +1,14 @@
+# polymirror — Polymarket mirror-trading backtest
+# Pinned-ish; exact versions resolved at install time and recorded in requirements.lock (Phase 1).
+requests
+pandas
+numpy
+scipy
+statsmodels
+matplotlib
+pyarrow
+tqdm
+
+# test/dev
+pytest
+pytest-cov

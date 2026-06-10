@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Data caches — regenerable, never commit raw pulls
+data/raw/
+data/cache/
+*.parquet
+*.feather
+
+# Live forward-experiment state — NOT regenerable (forward data cannot be backfilled),
+# but it churns every poll, so keep it out of git and BACK IT UP separately.
+data/forward/
+
+# Results are regenerable from cached data + config
+results/*.png
+results/*.csv
+results/*.json
+!results/.gitkeep
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build / orchestration scaffolding (not part of the research deliverable)
+notes/_collect.py
+notes/_pushlist.json
+notes/*.js
+
+# Never commit secrets (this project NEVER needs a private key — see README R0)
+.env
+*.key
+
+# Personal documents and generated slide decks: keep out of the public repo
+paper/*.pptx
+paper/~$*
+paper/Macro Capstone Project Research Notes.pdf
+paper/Ryan Sykes Capstone Project_*.pdf
+.coverage
