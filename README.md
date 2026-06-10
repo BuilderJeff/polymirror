@@ -103,12 +103,3 @@ See [`LIMITATIONS.md`](LIMITATIONS.md) (written in Phase 6): wallet ≠ person; 
 assumption; V1/V2 data-span continuity; the luck-vs-skill caveat with citations; and any
 data-availability compromises surfaced during Phase 1.
 
-## build status
-
-- [x] **Phase 0** — environment, venv, `config.py` single source of truth
-- [ ] **Phase 1** — connectivity + one-market vertical slice _(in progress)_
-- [ ] **Phase 2** — stand up the cloned backtest engine
-- [ ] **Phase 3** — ingestion at scale + parquet caching
-- [ ] **Phase 4** — `scorer.py` + `simulator.py` (the two custom components)
-- [ ] **Phase 5** — full run + sensitivities (spread presets, `min_trades_per_wallet` sweep)
-- [ ] **Phase 6** — write-up + LIMITATIONS
