@@ -14,7 +14,7 @@ over holding horizon *N*, not a single number.
 
 ---
 
-## §0 — Hard rules (override everything)
+## §0: hard rules (override everything)
 
 1. **Historical backtest only.** This code never places a live trade, never requires or stores a
    private key, and never connects a funded wallet. Every API call is a read.
@@ -24,7 +24,7 @@ over holding horizon *N*, not a single number.
    **modeled parametric assumption**, labeled as such on every number it touches, and swept over
    `optimistic` / `base` / `conservative` presets.
 
-## Design rules (each one, if violated, invalidates the result)
+## design rules (each one, if violated, invalidates the result)
 
 | | Rule |
 |---|---|
@@ -39,7 +39,7 @@ over holding horizon *N*, not a single number.
 
 ---
 
-## The two components we build ourselves
+## the two components we build ourselves
 
 Everything else adapts existing open-source code (see `notes/existing_repos.md`). These two are
 original, and are where the rigor lives:
@@ -49,7 +49,7 @@ original, and are where the rigor lives:
 2. **`simulator.py`** — out-of-sample mirror simulator + buy-the-favorite benchmark, producing the
    **edge = strategy − benchmark** decay curve with bootstrapped CIs, under each spread preset.
 
-## Data sources (public, no auth)
+## data sources (public, no auth)
 
 | API | Base URL | Used for |
 |---|---|---|
@@ -61,7 +61,7 @@ There is **no free historical order-book depth** — see `notes/spread_calibrati
 
 ---
 
-## Repository layout
+## repository layout
 
 ```
 polymirror/
@@ -78,7 +78,7 @@ polymirror/
 └── tests/                # unit tests (scorer toy set, assert_no_leakage)
 ```
 
-## Setup
+## setup
 
 ```powershell
 python -m venv .venv
@@ -86,24 +86,24 @@ python -m venv .venv
 .\.venv\Scripts\python.exe config.py        # self-test the config
 ```
 
-## How to run
+## how to run
 
 > Filled in as phases land. Phase 1 (vertical slice):
 > `.\.venv\Scripts\python.exe phase1_slice.py`
 
 ---
 
-## Which parts are cloned vs custom
+## which parts are cloned vs custom
 
 _Filled in after Phase 1 repo scouting — see `notes/existing_repos.md`._
 
-## Limitations
+## limitations
 
 See [`LIMITATIONS.md`](LIMITATIONS.md) (written in Phase 6): wallet ≠ person; the parametric-spread
 assumption; V1/V2 data-span continuity; the luck-vs-skill caveat with citations; and any
 data-availability compromises surfaced during Phase 1.
 
-## Build status
+## build status
 
 - [x] **Phase 0** — environment, venv, `config.py` single source of truth
 - [ ] **Phase 1** — connectivity + one-market vertical slice _(in progress)_
